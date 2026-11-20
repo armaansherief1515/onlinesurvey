@@ -4,10 +4,17 @@ const bcrypt = require("bcryptjs");
 const session = require("express-session");
 const path = require("path");
 
+require("dotenv").config();
+
 const app = express();
+
 app.set("trust proxy", 1);
+
+// CORS Configuration
+
 app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "https://kavin-46.github.io");
+
+    res.header("Access-Control-Allow-Origin", "https://sahanaarmaan1515.github.io");
     res.header("Access-Control-Allow-Credentials", "true");
     res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
     res.header("Access-Control-Allow-Headers", "Content-Type");
@@ -21,13 +28,17 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
+
+// Session Configuration
+
 app.use(session({
-    secret: "surveysecret",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
         sameSite: "none",
-        secure: true
+        secure: true,
+        httpOnly: true
     }
 }));
 
@@ -36,7 +47,7 @@ app.use(express.static(path.join(__dirname, "../frontend")));
 
 // MongoDB Connection
 
-mongoose.connect("mongodb+srv://onlinesurvey:732924itr046@cluster1.slsdpya.mongodb.net/OnlineSurvey?retryWrites=true&w=majority")
+mongoose.connect(process.env.MONGODB_URI)
 .then(() => console.log("MongoDB Connected"))
 .catch(err => console.log(err));
 
@@ -154,6 +165,7 @@ app.post("/register", async (req, res) => {
 
     }
     catch (err) {
+        console.log(err);
         res.status(500).json({ message: "Registration Error" });
     }
 
@@ -180,6 +192,7 @@ app.post("/login", async (req, res) => {
 
     }
     catch (err) {
+        console.log(err);
         res.status(500).json({ message: "Login Error" });
     }
 
@@ -215,6 +228,7 @@ app.get("/questions", checkLogin, async (req, res) => {
 
     }
     catch (err) {
+        console.log(err);
         res.status(500).json({ message: "Question Loading Error" });
     }
 
@@ -300,6 +314,7 @@ app.post("/submit", checkLogin, async (req, res) => {
 
     }
     catch (err) {
+        console.log(err);
         res.status(500).json({ message: "Submission Error" });
     }
 
@@ -383,6 +398,7 @@ app.get("/analysis", checkLogin, async (req, res) => {
 
     }
     catch (err) {
+        console.log(err);
         res.status(500).json({ message: "Analysis Error" });
     }
 
@@ -394,6 +410,7 @@ app.get("/analysis", checkLogin, async (req, res) => {
 app.get("/logout", (req, res) => {
 
     req.session.destroy(() => {
+        res.clearCookie("connect.sid");
         res.json({ message: "Logged Out" });
     });
 
@@ -408,11 +425,11 @@ mongoose.connection.once("open", async () => {
 
         await addQuestions();
 
-       const PORT = process.env.PORT || 5000;
+        const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
 
     }
     catch (err) {
